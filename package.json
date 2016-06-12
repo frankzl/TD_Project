@@ -1,0 +1,32 @@
+{
+  "name": "tower-defense",
+  "version": "0.0.1",
+  "description": "my first socket.io app",
+  "dependencies": {
+    "express": "^4.13.4",
+    "gulp": "^3.9.1",
+    "gulp-browserify": "^0.5.1",
+    "gulp-concat": "^2.6.0",
+    "gulp-install": "^0.6.0",
+    "gulp-nodemon": "^2.0.7",
+    "p2": "^0.7.1",
+    "socket.io": "^1.4.6"
+  },
+  "devDependencies": {
+    "gulp-install": "^0.6.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "main": "client.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frankzl/TD_Project.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/frankzl/TD_Project/issues"
+  },
+  "homepage": "https://github.com/frankzl/TD_Project#readme"
+}

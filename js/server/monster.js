@@ -8,6 +8,7 @@ exports.create = function(monster){
     monster.position.x += monster.direction.x*monster.velocity;
     monster.position.y += monster.direction.y*monster.velocity;
   }
+  
   this.jump = function(x,y){
     monster.position.x = parseInt(x);
     monster.position.y = parseInt(y);

@@ -17,6 +17,7 @@ function preload() {
     game.load.image('towert1', 'assets/TowerT1.png');
     game.load.image('spawn', 'assets/Spawn1.png');
     game.load.image('monster', 'assets/Monster1.png');
+    game.load.image('bullet', 'assets/Bullet1.png');
 }
 
 function create() {
@@ -43,5 +44,5 @@ function translateToFieldCoord(x,y){
 }
 
 function update() {
-
+  
 }

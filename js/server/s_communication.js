@@ -24,7 +24,7 @@ exports.communication = function(io){
           if(bullets != null){
             socket.emit('bullet_update', bullets);
           }
-        }, 80)
+        }, 60)
 
         socket.on('ready', function(){
           ready = true;

@@ -8,6 +8,7 @@ var settings;
 var UPDATE_INTERVAL = 500;
 
 var distance_map = new Array();
+var nextDir_map = new Array();
 var monster_map = new Array();
 
 var monsters = new Array();
@@ -27,16 +28,20 @@ exports.initGame = function(path, socket){
   preload();
   create();
   distance_map = new Array(settings.width);
+  nextDir_map = new Array(settings.width);
   monster_map = new Array(settings.width);
   for(i=0; i<settings.width; i++){
+    nextDir_map[i]  = new Array(settings.height);
     distance_map[i] = new Array(settings.height)
-    monster_map[i] = new Array(settings.height)
+    monster_map[i]  = new Array(settings.height)
     for(j=0; j<settings.height; j++){
       distance_map[i][j] = 1000;
       monster_map[i][j] = -1;
+      nextDir_map[i][j] = 0;
     }
   }
   findShortestPath(7, 14, 0);
+  setNextDirMap();
   console.log(distance_map);
 }
 
@@ -47,6 +52,7 @@ exports.buildTower = function(tower){
   towers.push(new Tower.create(tower, monster_map, monsters));
   resetDistance_map();
   findShortestPath(7, 14, 0);
+  setNextDirMap();
 }
 
 exports.getMonsterList = function(){
@@ -57,7 +63,9 @@ exports.getMonsterList = function(){
 }
 
 exports.getBulletList = function(){
-  return JSON.stringify(getPositionList(bullets));
+  var positionList = getPositionList(bullets);
+  if(positionList == null){return null}
+  return JSON.stringify(positionList);
 }
 
 function getPositionList(array){
@@ -84,7 +92,7 @@ exports.getTowerList = function(){
 exports.spawnMonster = function(x, y, dir_x, dir_y, velocity){
   var m = {
     position: {x: 7, y: 0},
-    direction: {x: 0, y: 1},
+    direction: {x: 0, y: 0},
     velocity: 1
   }
   monsters.push(new Monster.create(m));
@@ -143,21 +151,27 @@ function update_monsterMovement(){
   var currentIndex = 0;
   if(monsters != undefined && monsters.length != 0){
     for(i = 0; i < monsters.length; i++){
-      var next = nextPos(monsters[i].position);
+      //var next = nextPos(monsters[i].position);
       var current = monsters[i].position;
       if(monster_map[current.x][current.y] == currentIndex){
-        console.log(current.x+"|"+current.y)
         monster_map[current.x][current.y] = -1;
       }
-      monsters[i].jump(next.x, next.y);
-      if(monsters[i].position.y >= settings.height-1){
-        monsters[i].position.x = -1;
+      var next = nextDir_map[monsters[i].position.x][monsters[i].position.y];
+      console.log("direction")
+      console.log(next)
+      monsters[i].direction.x = next.x;
+      monsters[i].direction.y = next.y;
+      //monsters[i].jump(next.x, next.y);
+
+      console.log(monsters[i].direction)
+      if(monsters[i].move() && monsters[i].position.y >= settings.height-1){
         monsters.splice(i, 1);
         console.log("removed at index: "+i);
         io.sockets.emit('monster_killed', i);
         i--;
       }else{
-        monster_map[next.x][next.y] = i;
+        console.log(monsters[i].position.x+"||||"+monsters[i].position.y)
+        monster_map[monsters[i].position.x][monsters[i].position.y] = i;
       }
       currentIndex++;
     }
@@ -176,7 +190,10 @@ function resetArray(array, value){
 }
 
 var resetMonster_map = function(){resetArray(monster_map, -1)}
-var resetDistance_map = function(){resetArray(distance_map, 1000)}
+var resetDistance_map = function(){
+  resetArray(distance_map, 1000);
+  resetArray(nextDir_map, 0);
+}
 
 function findShortestPath(x, y, dist){
   if(x<0 || x>=settings.width || y<0 || y>=settings.height){
@@ -194,34 +211,70 @@ function findShortestPath(x, y, dist){
   }
 }
 
+function setNextDirMap(){
+  for( x_i = 0; x_i < settings.width; x_i++) {
+    for( y_i = 0; y_i < settings.height; y_i++){
+      var nextPos = getNextPosition(x_i, y_i);
+      if(nextPos == null){
+        nextDir_map[x_i][y_i] = {x: 0, y: 0};
+      }else{
+        nextDir_map[x_i][y_i] = {x:(nextPos.x-x_i), y:(nextPos.y-y_i)};
+      }
+      if(nextDir_map[x_i][y_i].x == -8){
+        console.log("somewhere here");
+        console.log(nextPos);
+    console.log(x_i+";."+y_i)}
+    }
+  }
+  console.log(nextDir_map);
+}
+
+var getNextPosition = function(xp, yp){return nextPos({x:xp, y:yp})}
+
 function nextPos(position){
   var x = position.x;
   var y = position.y;
   var next_x = -1;
   var next_y = -1;
-  var x1 = position.x-1, y1 = position.y;
+  var x1 = x-1, y1 = y;
   var dist = 1000;
-
+  if(x==7 && y==0){console.log("here")}
   if(x1>=0 && x1<settings.width && y1>=0 && y1<settings.height &&
-      distance_map[x1][y1] >= 0 && dist > distance_map[x-1][y]){
+      (distance_map[x1][y1] >= 0) && dist > distance_map[x-1][y]){
       next_x = x1; next_y = y1; dist = distance_map[x-1][y];
+      if(x == 7 && y == 0){
+        var temp = (distance_map[x1][y1]>=0)
+        console.log("h"+temp)
+        console.log("d:"+(distance_map[x1][y1]))}
   }
   x1 = x+1; y1 = y;
-  var ran = Math.random();
   if(x1>=0 && x1<settings.width && y1>=0 && y1<settings.height &&
       distance_map[x1][y1]>= 0 && dist > distance_map[x+1][y]){
       next_x = x+1; next_y = y; dist = distance_map[x+1][y];
+      if(x == 7 && y == 0){
+        var temp = (distance_map[x1][y1]>=0)
+        console.log("h"+temp)
+        console.log("d:"+(distance_map[x1][y1]))}
   }
   x1 = x; y1 = y-1;
   if(x1>=0 && x1<settings.width && y1>=0 && y1<settings.height &&
       distance_map[x1][y1]>=0 && dist > distance_map[x][y-1]){
       next_x = x; next_y = y-1; dist = distance_map[x][y-1];
+      if(x == 7 && y == 0){
+        var temp = (distance_map[x1][y1]>=0)
+        console.log("h"+temp)
+        console.log("d:"+(distance_map[x1][y1]))}
   }
   x1 = x; y1 = y+1;
   if(x1>=0 && x1<settings.width && y1>=0 && y1<settings.height &&
       distance_map[x1][y1]>=0 && dist >= distance_map[x][y+1]){
       next_x = x; next_y = y+1; dist = distance_map[x][y+1];
+      if(x == 7 && y == 0){
+        var temp = (distance_map[x1][y1]>=0)
+        console.log("h"+temp)
+        console.log("d:"+(distance_map[x1][y1]))}
   }
+  if(next_x == -1){return null}
   return {x: next_x, y:next_y};
 }
 
@@ -234,6 +287,6 @@ function translateToGameCoord(x, y){
 function translateToFieldCoord(x,y){
   return {
     x: x*settings.tilewidth,
-    y: y*settings.tileheight
+    y: (y*settings.tileheight)
   }
 }

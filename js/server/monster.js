@@ -2,13 +2,15 @@
 exports.create = function(monster){
   this.position = monster.position;
   this.direction = monster.direction;
-  this.velocity = monster.velocity;
+  this.velocity = 1;//monster.velocity;
 
-  this.move = function(step){
+  this.move = function(){
+    if(this.direction == 0){return false}
     monster.position.x += monster.direction.x*monster.velocity;
     monster.position.y += monster.direction.y*monster.velocity;
+    return true;
   }
-  
+
   this.jump = function(x,y){
     monster.position.x = parseInt(x);
     monster.position.y = parseInt(y);

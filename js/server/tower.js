@@ -30,7 +30,7 @@ exports.create = function(tower, map, monst){
   this.target = undefined;
   this.speed = 20;
 
-  this.reloadTimer = 2;
+  this.reloadTimer = 0;
   this.counter = 0;
 
   this.acquireTarget = function(){
@@ -43,7 +43,6 @@ exports.create = function(tower, map, monst){
           if( x >= 0 && x < monster_map.length && y>=0 && y<monster_map.length){
             var monster_index = monster_map[x][y];
             if(monster_index != -1 && monster_index != undefined){
-              console.log(monster_index+"index: "+monsters[monster_index])
               if(this.inRange(monsters[monster_index].position)){
                 console.log("can shoot");
                 target = monsters[monster_index];
